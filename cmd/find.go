@@ -15,7 +15,9 @@
 package cmd
 
 import (
-	"fmt"
+	"database/sql"
+
+	_ "github.com/segmentio/go-athena"
 
 	"github.com/spf13/cobra"
 )
@@ -23,7 +25,7 @@ import (
 // findCmd represents the find command
 var findCmd = &cobra.Command{
 	Use:   "find",
-	Short: "A brief description of your command",
+	Short: "Find data objects in AWS primary data store",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -31,7 +33,14 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("find called")
+		db, _ := sql.Open("athena", "db=dafu")
+		rows, _ := db.Query("SELECT key FROM data LIMIT 5;")
+
+		for rows.Next() {
+			var url string
+			var code int
+			rows.Scan(&url, &code)
+		}
 	},
 }
 
