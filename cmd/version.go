@@ -1,4 +1,4 @@
-// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 Roman Valls Guimera <brainstorm at nopcode org>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var VERSION = "0.1"
+var VERSION = "0.0.1"
 
 // versionCmd represents the version command
 var versionCmd = &cobra.Command{

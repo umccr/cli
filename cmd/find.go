@@ -1,4 +1,4 @@
-// Copyright © 2019 NAME HERE <EMAIL ADDRESS>
+// Copyright © 2019 Roman Valls Guimera <brainstorm at nopcode org>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,14 @@ package cmd
 
 import (
 	"database/sql"
+	"fmt"
+	"time"
 
+	"github.com/spf13/viper"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/athena"
 	_ "github.com/segmentio/go-athena"
 
 	"github.com/spf13/cobra"
@@ -32,16 +39,85 @@ and usage of using your command. For example:
 Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
+	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		db, _ := sql.Open("athena", "db=dafu")
-		rows, _ := db.Query("SELECT key FROM data LIMIT 5;")
-
-		for rows.Next() {
-			var url string
-			var code int
-			rows.Scan(&url, &code)
-		}
+		athenaQuery()
 	},
+}
+
+func athenaSegmentQuery() {
+	db, _ := sql.Open("athena", "db=dafu")
+	rows, _ := db.Query("SELECT key FROM data LIMIT 5;")
+
+	for rows.Next() {
+		var url string
+		var code int
+		rows.Scan(&url, &code)
+	}
+}
+
+func athenaQuery() {
+
+	string aws_region = viper.Get("aws_region")
+
+	awscfg := &aws.Config{}
+	awscfg.WithRegion(aws_region)
+	// Create the session that the service will use.
+	sess := session.Must(session.NewSession(awscfg))
+
+	svc := athena.New(sess, aws.NewConfig().WithRegion(aws_region))
+	var s athena.StartQueryExecutionInput
+	s.SetQueryString("SELECT key FROM data LIMIT 5")
+
+	var q athena.QueryExecutionContext
+	q.SetDatabase("dafu")
+	s.SetQueryExecutionContext(&q)
+
+	var r athena.ResultConfiguration
+	r.SetOutputLocation("s3://umccr-athena-query-results-dev")
+	s.SetResultConfiguration(&r)
+
+	result, err := svc.StartQueryExecution(&s)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	// fmt.Println("StartQueryExecution result:")
+	// fmt.Println(result.GoString())
+
+	var qri athena.GetQueryExecutionInput
+	qri.SetQueryExecutionId(*result.QueryExecutionId)
+
+	var qrop *athena.GetQueryExecutionOutput
+	duration := time.Duration(2) * time.Second // Pause for 2 seconds
+
+	for {
+		qrop, err = svc.GetQueryExecution(&qri)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		if *qrop.QueryExecution.Status.State != "RUNNING" {
+			break
+		}
+		time.Sleep(duration)
+
+	}
+	if *qrop.QueryExecution.Status.State == "SUCCEEDED" {
+
+		var ip athena.GetQueryResultsInput
+		ip.SetQueryExecutionId(*result.QueryExecutionId)
+
+		op, err := svc.GetQueryResults(&ip)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		fmt.Printf("%+v", op)
+	} else {
+		fmt.Println(*qrop.QueryExecution.Status.State)
+
+	}
 }
 
 func init() {

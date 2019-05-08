@@ -17,13 +17,13 @@ matrix:
   fast_finish: true
 
 script:
-    - go build . -o umccr 
+    - go build . -o bin/umccr -i .
 
 # deploy:
 #   - provider: releases
 #     skip_cleanup: true
 #     file:
-#       - $PROJECT_NAME
+#       - bin/$PROJECT_NAME
 #     api_key:
 #       secure: <secure>
 
