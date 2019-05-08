@@ -1,0 +1,31 @@
+language: go 
+
+go:
+  - 1.11.x
+  - 1.12
+
+os:
+  - osx
+  - linux
+
+env:
+  global:
+    - PROJECT_NAME: umccr
+    - GO111MODULE: on
+
+matrix:
+  fast_finish: true
+
+script:
+    - go build . -o umccr 
+
+# deploy:
+#   - provider: releases
+#     skip_cleanup: true
+#     file:
+#       - $PROJECT_NAME
+#     api_key:
+#       secure: <secure>
+
+notifications:
+  email: false
