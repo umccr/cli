@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/spf13/viper"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/athena"
@@ -58,14 +56,14 @@ func athenaSegmentQuery() {
 
 func athenaQuery() {
 
-	string aws_region = viper.Get("aws_region")
+	//string aws_region = viper.Get("aws_region")
 
 	awscfg := &aws.Config{}
-	awscfg.WithRegion(aws_region)
+	awscfg.WithRegion("ap-southeast-2")
 	// Create the session that the service will use.
 	sess := session.Must(session.NewSession(awscfg))
 
-	svc := athena.New(sess, aws.NewConfig().WithRegion(aws_region))
+	svc := athena.New(sess, aws.NewConfig().WithRegion("ap-southeast-2"))
 	var s athena.StartQueryExecutionInput
 	s.SetQueryString("SELECT key FROM data LIMIT 5")
 
