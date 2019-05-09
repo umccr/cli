@@ -5,9 +5,6 @@ go:
     - 1.x
 git:
   depth: 1
-env:
-  - GO111MODULE=on
-  - GOFLAGS='-mod vendor'
 # Skip the install step. Don't `go get` dependencies. Only build with the code
 # in vendor/
 install:
@@ -41,6 +38,5 @@ deploy:
     - umccr.linux.amd64
   on:
     repo: umccr/cli
-    condition: $LATEST = true
 notifications:
   email: false
