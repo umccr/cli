@@ -8,7 +8,6 @@ os:
 env:
   global:
   - PROJECT_NAME: umccr
-  - GO111MODULE: true
 matrix:
   fast_finish: true
 script:
