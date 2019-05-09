@@ -1,22 +1,46 @@
 language: go
+sudo: false
+
 go:
-    - 1.12
-os:
-    - osx
-    - linux
+    - 1.x
+git:
+  depth: 1
 env:
-  global:
-    - PROJECT_NAME: umccr
+  - GO111MODULE=on
+  - GOFLAGS='-mod vendor'
+# Skip the install step. Don't `go get` dependencies. Only build with the code
+# in vendor/
+install:
+  - # skip
 matrix:
+  include:
+    - go: 1.x
+      env: LATEST=true
   fast_finish: true
+
+before_install:
+  # gox simplifies building for multiple architectures
+  - go get github.com/mitchellh/gox
+
 script:
-    - go build https://github.com/umccr/cli -o bin/umccr -i .
+    - go get -t -v ./...
+    - diff -u <(echo -n) <(gofmt -d .)
+    - go vet $(go list ./... | grep -v /vendor/)
+    - go test -v -race ./...
+    # Only build binaries from the latest Go release.
+    - if [ "${LATEST}" = "true" ]; then gox -os="linux darwin windows" -arch="amd64" -output="umccr.." -ldflags "-X main.Rev=`git rev-parse --short HEAD`" -verbose ./...; fi
+
 deploy:
   provider: releases
   api_key:
     secure: kFRoKQzAw7CzfzniITjWd7H87cFhiRHrGow7zvrDfWPNwrf4sB4vG7sNOBux2Fn4qbLkucrvijVAfWHmA8REXCynM84TylT8tGrnO4soOkRg+kmH2dinqKDyWL8Kov2mXAJ8Q79EuJtiJEo8lJMOg43eLL7Soe1sWES5WqMoOVJSagKlDny8bRTHRYUs4py3GQo7ZW3jGRO0l50ICAqgk3ODFRQVdTfk6ftbJhov6TO9v8QyL4cwXvrAzxVBLf6RCay+AZXi/rFdGmf0CxHH/STbI6s4JjMUqIWBmVu2BG/ek5FP7BizjESb6RSawbKieaAFXuGD2glg94uMe8eG48hPZUgnMhJlZdvIKipDYyzWWakJz2RgLf9aVYHfn9lPRqcnrBrHeTGxiGvfQwS5TvVtL4ODsJsDfar31MgnUoJBZ5odbj0y07g/rprfJnosSwJvkAssKB44XDf2Tu0leXNv+1sjxvTYC8swTmFF2LL1wNAV/9f6DYmr2ocs+cTjrBHwxs5Mg6jKPh2XLEvkUDvX2LJ8TbLsu8OVbbL6Zkr571pAGOapvBuniSu8v9KRfW9RVn+r13WaE53DxqTE3CVC1APvUsKdhSLdpy6SiYOkNoOfIF+EFldSVbsdAXYHel5/aFbxPj9BKpA1AjOUbbghY0OLIcKg7pqr8sBERe0=
-  file: bin/umccr
+  file:
+      # The names of the binaries to output, based on the -output template passed to gox.
+    - umccr.windows.amd64.exe
+    - umccr.darwin.amd64
+    - umccr.linux.amd64
   on:
     repo: umccr/cli
+    condition: $LATEST = true
 notifications:
   email: false
