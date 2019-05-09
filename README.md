@@ -1,6 +1,8 @@
+[![TravisCI build status](https://travis-ci.org/umccr/cli.svg)](https://travis-ci.org/umccr/cli)
+
 # UMCCR cli tool
 
-Organization command line tool to ease common operations, focusing on helping researchers to transition from HPLAC (High Performance Low Availability Computing) to cloud computing.
+Organization command line tool to ease common operations, focusing on helping researchers to transition from HPLAC (High Performance Low Availability Computing) to cloud computing and reducing UX friction.
 
 This CLI tool is based on the [Go cobra CLI framework](https://github.com/spf13/cobra), used by "many of the most widely used Go projects". The main motivation of writing this in Go is that no python virtual environment setup is required, just download the Go binary and off we go!
 
