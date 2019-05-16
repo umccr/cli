@@ -17,30 +17,35 @@ package cmd
 import (
 	"fmt"
 
+	goVersion "github.com/christopherhein/go-version"
 	"github.com/spf13/cobra"
 )
 
-var VERSION = "0.0.1"
+var (
+	shortened  = false
+	version    = "dev"
+	commit     = "none"
+	date       = "unknown"
+	versionCmd = &cobra.Command{
+		Use:   "version",
+		Short: "Version will output the current build information",
+		Long:  ``,
+		Run: func(_ *cobra.Command, _ []string) {
+			var response string
+			versionOutput := goVersion.New(version, commit, date)
 
-// versionCmd represents the version command
-var versionCmd = &cobra.Command{
-	Use:   "version",
-	Short: "Shows version of UMCCR cmdline tool",
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println(VERSION)
-	},
-}
+			if shortened {
+				response = versionOutput.ToShortened()
+			} else {
+				response = versionOutput.ToJSON()
+			}
+			fmt.Printf("%+v", response)
+			return
+		},
+	}
+)
 
 func init() {
+	versionCmd.Flags().BoolVarP(&shortened, "short", "s", false, "Use shortened output for version information.")
 	rootCmd.AddCommand(versionCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// versionCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// versionCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

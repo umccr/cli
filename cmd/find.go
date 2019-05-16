@@ -15,14 +15,8 @@
 package cmd
 
 import (
-	"database/sql"
+	"encoding/json"
 	"fmt"
-	"time"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/athena"
-	_ "github.com/segmentio/go-athena"
 
 	"github.com/spf13/cobra"
 )
@@ -39,82 +33,65 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		athenaQuery()
+		res := apiGwFindQuery(fmt.Sprintf("%s&rowsPerPage=5000", args[0]))
+		parseFindQueryResults(res)
 	},
 }
 
-func athenaSegmentQuery() {
-	db, _ := sql.Open("athena", "db=dafu")
-	rows, _ := db.Query("SELECT key FROM data LIMIT 5;")
+func apiGwFindQuery(query string) string {
+	// sess := session.Must(session.NewSession(aws.NewConfig().WithMaxRetries(3)))
+	// svc := apigateway.New(sess)
+	// req, resp := svc.Client.NewRequest()
 
-	for rows.Next() {
-		var url string
-		var code int
-		rows.Scan(&url, &code)
-	}
+	// err := req.Send()
+	// if err == nil { // resp is now filled
+	// 	fmt.Println(resp)
+	// }
+
+	// resp, err := http.Get(fmt.Sprintf("%s/dev/files?query=%s", viper.Get("aws_ummcr_api_endpoint"), query))
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+
+	// body, err := ioutil.ReadAll(resp.Body)
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+	// return string(body)
+
+	// res := request.New(aws.Config(credentials.))
+	//return res
+	return "WIP"
 }
 
-func athenaQuery() {
+func parseFindQueryResults(jsonTxt string) {
 
-	//string aws_region = viper.Get("aws_region")
-
-	awscfg := &aws.Config{}
-	awscfg.WithRegion("ap-southeast-2")
-	// Create the session that the service will use.
-	sess := session.Must(session.NewSession(awscfg))
-
-	svc := athena.New(sess, aws.NewConfig().WithRegion("ap-southeast-2"))
-	var s athena.StartQueryExecutionInput
-	s.SetQueryString("SELECT key FROM data LIMIT 5")
-
-	var q athena.QueryExecutionContext
-	q.SetDatabase("dafu")
-	s.SetQueryExecutionContext(&q)
-
-	var r athena.ResultConfiguration
-	r.SetOutputLocation("s3://umccr-athena-query-results-dev")
-	s.SetResultConfiguration(&r)
-
-	result, err := svc.StartQueryExecution(&s)
-	if err != nil {
-		fmt.Println(err)
-		return
+	// http://json2struct.mervine.net/
+	type findResults struct {
+		Meta struct {
+			Page       int `json:"page"`
+			Size       int `json:"size"`
+			Start      int `json:"start"`
+			TotalPages int `json:"totalPages"`
+			TotalRows  int `json:"totalRows"`
+		} `json:"meta"`
+		Rows struct {
+			DataRows  [][]string `json:"dataRows"`
+			HeaderRow []struct {
+				Key      string `json:"key"`
+				Sortable bool   `json:"sortable"`
+			} `json:"headerRow"`
+		} `json:"rows"`
 	}
-	// fmt.Println("StartQueryExecution result:")
-	// fmt.Println(result.GoString())
 
-	var qri athena.GetQueryExecutionInput
-	qri.SetQueryExecutionId(*result.QueryExecutionId)
+	var results findResults
 
-	var qrop *athena.GetQueryExecutionOutput
-	duration := time.Duration(2) * time.Second // Pause for 2 seconds
-
-	for {
-		qrop, err = svc.GetQueryExecution(&qri)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		if *qrop.QueryExecution.Status.State != "RUNNING" {
-			break
-		}
-		time.Sleep(duration)
-
-	}
-	if *qrop.QueryExecution.Status.State == "SUCCEEDED" {
-
-		var ip athena.GetQueryResultsInput
-		ip.SetQueryExecutionId(*result.QueryExecutionId)
-
-		op, err := svc.GetQueryResults(&ip)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		fmt.Printf("%+v", op)
-	} else {
-		fmt.Println(*qrop.QueryExecution.Status.State)
-
+	// XXX:
+	// * implement different find flags such as filesize and timestamp
+	// * {"message":"Missing Authentication Token"}... substitute for "please run umccr login" message
+	json.Unmarshal([]byte(jsonTxt), &results)
+	for i := range results.Rows.DataRows {
+		fmt.Printf("%s\n", results.Rows.DataRows[i][2])
 	}
 }
 

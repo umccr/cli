@@ -6,6 +6,8 @@ Organization command line tool to ease common operations, focusing on helping re
 
 This CLI tool is based on the [Go cobra CLI framework](https://github.com/spf13/cobra), used by "many of the most widely used Go projects". The main motivation of writing this in Go is that no python virtual environment setup is required, just download the Go binary and off we go!
 
+[This HN thread also helped with the Go-convincing](https://news.ycombinator.com/item?id=19459787).
+
 # Quickstart
 
 After downloading the CLI release for your platform:
