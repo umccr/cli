@@ -26,36 +26,6 @@ Assuming arn:aws:iam::<ACCT>:role/<ROLE>
 Credentials Expiration: 2019-05-09 19:15:28+10:00
 
 $ umccr find foo
-{
-  ResultSet: {
-    ResultSetMetadata: {
-      ColumnInfo: [{
-          CaseSensitive: true,
-          CatalogName: "hive",
-          Label: "key",
-          Name: "key",
-          Nullable: "UNKNOWN",
-          Precision: 2147483647,
-          Scale: 0,
-          SchemaName: "",
-          TableName: "",
-          Type: "varchar"
-        }]
-    },
-    Rows: [
-      {
-        Data: [{
-            VarCharValue: "key"
-          }]
-      },
-      {
-        Data: [{
-            VarCharValue: "foo-P016-merged.csv"
-          }]
-      },
-      {
-        Data: [{
-            VarCharValue: "foo-merged-template.yaml"
-          }]
-      },
+foo-P016-merged.csv
+foo-merged-template.yaml
 ```
