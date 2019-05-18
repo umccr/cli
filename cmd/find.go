@@ -17,7 +17,13 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/external"
+
+	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
 	"github.com/spf13/cobra"
 )
 
@@ -39,28 +45,36 @@ to quickly create a Cobra application.`,
 }
 
 func apiGwFindQuery(query string) string {
-	// sess := session.Must(session.NewSession(aws.NewConfig().WithMaxRetries(3)))
-	// svc := apigateway.New(sess)
-	// req, resp := svc.Client.NewRequest()
 
-	// err := req.Send()
-	// if err == nil { // resp is now filled
-	// 	fmt.Println(resp)
-	// }
+	cfg, err := external.LoadDefaultAWSConfig(
+		external.WithSharedConfigProfile("default"),
+	)
+	if err != nil {
+		fmt.Println("unable to create an AWS session for the provided profile")
+	}
 
-	// resp, err := http.Get(fmt.Sprintf("%s/dev/files?query=%s", viper.Get("aws_ummcr_api_endpoint"), query))
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
+	//	ctx = context.TODO()
 
-	// body, err := ioutil.ReadAll(resp.Body)
-	// if err != nil {
-	// 	log.Fatalln(err)
-	// }
-	// return string(body)
+	req, _ := http.NewRequest(http.MethodGet, "", nil)
+	//	req = req.WithContext(ctx)
+	signer := v4.NewSigner(cfg.Credentials)
+	_, err = signer.Sign(req, nil, "execute-api", cfg.Region, time.Now())
+	if err != nil {
+		fmt.Printf("failed to sign request: (%v)\n", err)
+	}
 
-	// res := request.New(aws.Config(credentials.))
-	//return res
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Printf("failed to call remote service: (%v)\n", err)
+	}
+
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		fmt.Printf("service returned a status not 200: (%d)\n", res.StatusCode)
+	}
+
+	log.Println(res.Body.Read)
+
 	return "WIP"
 }
 
