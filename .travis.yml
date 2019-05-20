@@ -4,7 +4,7 @@ sudo: false
 go:
     - 1.x
 install:
-  - go build -i -v
+  - go get github.com/umccr/cli
 matrix:
   include:
     - go: 1.x
