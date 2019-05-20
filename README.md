@@ -16,6 +16,12 @@ After downloading the CLI release for your platform (here assuming you are on a 
 $ wget https://github.com/umccr/cli/releases/download/0.0.2-beta/umccr_0.0.2-beta_OSX-x86_64 -O /usr/local/bin/umccr
 ```
 
+Then create the following config file (this will most probably change in the near future):
+
+```yaml
+aws_apigw_endpoint: https://okhl40ool5.execute-api.ap-southeast-2.amazonaws.com
+```
+
 Just run one of the available commands (assuming you have an active STS authenticated session):
 
 ```bash
