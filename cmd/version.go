@@ -28,7 +28,7 @@ var (
 	date       = "unknown"
 	versionCmd = &cobra.Command{
 		Use:   "version",
-		Short: "Version will output the current build information",
+		Short: "Current build information",
 		Long:  ``,
 		Run: func(_ *cobra.Command, _ []string) {
 			var response string

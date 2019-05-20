@@ -15,31 +15,30 @@
 package cmd
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/mitchellh/go-homedir"
 
-	v4 "github.com/aws/aws-sdk-go/aws/signer/v4"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // findCmd represents the find command
 var findCmd = &cobra.Command{
 	Use:   "find",
-	Short: "Find data objects in AWS primary data store",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Args: cobra.MinimumNArgs(1),
+	Short: "Find objects in AWS data store",
+	Long:  `Uses the indexed S3 bucket listings database to lookup for filenames and metadata.`,
+	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		res := apiGwFindQuery(fmt.Sprintf("%s&rowsPerPage=5000", args[0]))
+		// XXX: Handle pagination gracefully, perhaps tailored to usecases?
+		res := apiGwFindQuery(fmt.Sprintf("/dev/files?query=%s&rowsPerPage=5000", args[0]))
 		parseFindQueryResults(res)
 	},
 }
@@ -49,14 +48,12 @@ func apiGwFindQuery(query string) string {
 	cfg, err := external.LoadDefaultAWSConfig(
 		external.WithSharedConfigProfile("default"),
 	)
+
 	if err != nil {
 		fmt.Println("unable to create an AWS session for the provided profile")
 	}
 
-	//	ctx = context.TODO()
-
-	req, _ := http.NewRequest(http.MethodGet, "", nil)
-	//	req = req.WithContext(ctx)
+	req, _ := http.NewRequest(http.MethodGet, viper.GetString("aws_apigw_endpoint")+query, nil)
 	signer := v4.NewSigner(cfg.Credentials)
 	_, err = signer.Sign(req, nil, "execute-api", cfg.Region, time.Now())
 	if err != nil {
@@ -73,9 +70,11 @@ func apiGwFindQuery(query string) string {
 		fmt.Printf("service returned a status not 200: (%d)\n", res.StatusCode)
 	}
 
-	log.Println(res.Body.Read)
+	buf := new(bytes.Buffer)
+	buf.ReadFrom(res.Body)
+	newStr := buf.String()
 
-	return "WIP"
+	return newStr
 }
 
 func parseFindQueryResults(jsonTxt string) {
@@ -105,12 +104,24 @@ func parseFindQueryResults(jsonTxt string) {
 	// * {"message":"Missing Authentication Token"}... substitute for "please run umccr login" message
 	json.Unmarshal([]byte(jsonTxt), &results)
 	for i := range results.Rows.DataRows {
-		fmt.Printf("%s\n", results.Rows.DataRows[i][2])
+		fmt.Printf("%s\n", results.Rows.DataRows[i][2]) // keynames ("paths", filenames, extensions... object names really)
 	}
 }
 
 func init() {
 	rootCmd.AddCommand(findCmd)
+
+	// XXX: Centralise config reading business
+	// Find home directory.
+	home, err := homedir.Dir()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
+	viper.AddConfigPath(home)
+	viper.SetConfigName(".umccr")
+	viper.ReadInConfig()
 
 	// Here you will define your flags and configuration settings.
 
