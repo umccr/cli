@@ -6,7 +6,7 @@ Organization command line tool to ease common operations, focusing on helping re
 
 This CLI tool is based on the [Go cobra CLI framework](https://github.com/spf13/cobra), used by "many of the most widely used Go projects". The main motivation of writing this in Go is that no python virtual environment setup is required, just download the Go binary and off we go!
 
-[This HN thread also helped with the Go-convincing](https://news.ycombinator.com/item?id=19459787).
+[This HN thread also helped with the Go-convincing](https://news.ycombinator.com/item?id=19459787), as well as the OICR (Canadian Genomics), with their [song-client](https://github.com/overture-stack/song-client).
 
 # Quickstart
 
@@ -14,12 +14,6 @@ After downloading the CLI release for your platform (here assuming you are on a 
 
 ```bash
 $ wget https://github.com/umccr/cli/releases/download/0.0.2-beta/umccr_0.0.2-beta_OSX-x86_64 -O /usr/local/bin/umccr
-```
-
-Then create the following config file (this will most probably change in the near future):
-
-```yaml
-aws_apigw_endpoint: https://okhl40ool5.execute-api.ap-southeast-2.amazonaws.com
 ```
 
 Just run one of the available commands (assuming you have an active STS authenticated session):
