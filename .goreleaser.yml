@@ -62,4 +62,4 @@ brew:
   # Custom install script for brew.
   # Default is 'bin.install "program"'.
   install: |
-    bin.install "umccr"
+    bin.install {{ .ArtifactName }}

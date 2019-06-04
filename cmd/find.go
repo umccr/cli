@@ -74,6 +74,9 @@ func apiGwFindQuery(query string) string {
 	buf.ReadFrom(res.Body)
 	newStr := buf.String()
 
+	// XXX
+	fmt.Println("WARNING: (Auto)-Pagination has not been implemented yet, the results above are a subset")
+
 	return newStr
 }
 

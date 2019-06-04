@@ -29,3 +29,18 @@ $ umccr find foo
 foo-P016-merged.csv
 foo-merged-template.yaml
 ```
+
+# Developers
+
+> "This thing is awesome, how can I add my own commands?" -- everyone @UMCCR.
+
+Here's how:
+
+```
+$ go get https://github.com/umccr/cli
+$ go get https://github.com/spf13/cobra
+$ ln -sf $GOPATH/src/github.com/umccr/cli cli && cd cli
+$ cobra add <yourcommand>
+```
+
+The last command [will create a Go code template](https://github.com/spf13/cobra#overview) for you to fill out.
