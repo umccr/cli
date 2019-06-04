@@ -13,7 +13,7 @@ This CLI tool is based on the [Go cobra CLI framework](https://github.com/spf13/
 After downloading the CLI release for your platform (here assuming you are on a Macintosh):
 
 ```bash
-$ wget https://github.com/umccr/cli/releases/download/0.0.2-beta/umccr_0.0.2-beta_OSX-x86_64 -O /usr/local/bin/umccr
+$ wget https://github.com/umccr/cli/releases/download/0.0.2/umccr_0.0.2_OSX-x86_64 -O /usr/local/bin/umccr
 ```
 
 Just run one of the available commands (assuming you have an active STS authenticated session):
