@@ -45,7 +45,7 @@ func init() {
 
 func initConfig() {
 	viper.SetConfigFile("$HOME/.umccr")
-	viper.SetDefault("aws_apigw_endpoint", "https://okhl40ool5.execute-api.ap-southeast-2.amazonaws.com")
+	viper.SetDefault("aws_apigw_endpoint", "https://2a0mvgomd8.execute-api.ap-southeast-2.amazonaws.com")
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {

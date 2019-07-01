@@ -19,11 +19,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/external"
-	"github.com/mitchellh/go-homedir"
 
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/spf13/cobra"
@@ -116,23 +114,8 @@ func init() {
 
 	// XXX: Centralise config reading business
 	// Find home directory.
-	home, err := homedir.Dir()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
 
-	viper.AddConfigPath(home)
+	//	viper.AddConfigPath(util.sys.FindHome())
 	viper.SetConfigName(".umccr")
 	viper.ReadInConfig()
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// findCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// findCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }
