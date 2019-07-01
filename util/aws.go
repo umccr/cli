@@ -1,4 +1,4 @@
-package umccr_util
+package util
 
 import (
 	"log"
