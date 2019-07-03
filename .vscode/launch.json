@@ -1,0 +1,17 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "Launch",
+			"type": "go",
+			"request": "launch",
+			"mode": "auto",
+			"program": "${fileDirname}",
+			"env": {},
+			"args": [
+                "find",
+                "2016_249_18_WH_P017_2__CCR180159_VPT-WH017A.baf.circos"
+            ]
+		}
+	]
+}
