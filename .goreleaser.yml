@@ -38,7 +38,7 @@ changelog:
     - '^docs:'
     - '^test:'
 
-brew:
+brews:
   name: umccr
   github:
     owner: umccr
