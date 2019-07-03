@@ -16,7 +16,6 @@ package cmd
 
 import (
 	"log"
-	"os/exec"
 
 	"github.com/spf13/cobra"
 )
@@ -27,37 +26,73 @@ var shareCmd = &cobra.Command{
 	Short: "Data sharing helper",
 	Long:  `Assists in data sharing process for UMCCR employees`,
 	Run: func(cmd *cobra.Command, args []string) {
-		collaborator, _ := cmd.Flags().GetString("collab")
-		if collaborator == "" {
-			log.Fatal("Please specify a recipient for your data sharing, it MUST be a keybase username, i.e: ohofmann (as found in https://keybase.io/ohofmann)")
+		receiver, _ := cmd.Flags().GetString("receiver")
+		if receiver == "" {
+			log.Fatal("Please specify a receiver for your data sharing, it MUST be a keybase username, i.e: ohofmann (as found in https://keybase.io/ohofmann)")
 		}
 
 		inputFile, _ := cmd.Flags().GetString("input")
 		if inputFile == "" {
-			log.Fatal("Please specify an input, cleartext file")
+			log.Fatal("Please specify an input, cleartext stream")
 		}
 
 		outputFile, _ := cmd.Flags().GetString("output")
-		if collaborator == "" {
-			log.Fatal("Please specify an output, encrypted file")
+		if outputFile == "" {
+			outputFile = "share_encrypted.gpg"
 		}
 
-		//XXX: Presign all urls
-		//util.aws.PresignURL(args[0])
+		// Presign all urls
+		// file, err := os.Open(inputFile)
+		// if err != nil {
+		// 	fmt.Println(err)
+		// 	return
+		// }
+		// defer file.Close()
 
-		// Use PGP instead of saltpack since it is more user friendly
-		shCmd := exec.Command("keybase", "pgp", "encrypt", collaborator, "-i", inputFile, "-o", outputFile)
+		// scanner := bufio.NewScanner(file)
+		// scanner.Split(bufio.ScanLines)
 
-		if err := shCmd.Run(); err != nil {
-			log.Fatal(err)
-		}
+		// var presigned []string
+
+		// for scanner.Scan() {
+		// 	presigned = append(presigned, util.PresignURL(scanner.Text()))
+		// }
+
+		// // Use PGP instead of saltpack since it is more user friendly
+		// // XXX: Use keybase Go client instead: keybase1.PGPClient()... public keybase api is not very clean :/
+		// shCmd := exec.Command("keybase", "pgp", "encrypt", receiver, "-i", inputFile, "-o", outputFile)
+
+		// if err := shCmd.Run(); err != nil {
+		// 	log.Fatal(err)
+		// }
+
+		// pr, pw := io.Pipe()
+		// defer pw.Close()
+
+		// // tell the command to write to our pipe
+		// cmd := exec.Command("keybase", "pgp", "encrypt", receiver, "-i", inputFile, "-o", outputFile)
+		// cmd.Stdout = pw
+
+		// go func() {
+		// 	defer pr.Close()
+		// 	// copy the data written to the PipeReader via the cmd to stdout
+		// 	if _, err := io.Copy(os.Stdout, pr); err != nil {
+		// 		log.Fatal(err)
+		// 	}
+		// }()
+
+		// // run the command, which writes all output to the PipeWriter
+		// // which then ends up in the PipeReader
+		// if err := cmd.Run(); err != nil {
+		// 	log.Fatal(err)
+		// }
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(shareCmd)
 
-	shareCmd.Flags().StringP("collab", "c", "", "Specify the recipient of the datasharing")
+	shareCmd.Flags().StringP("receiver", "r", "", "Specify the receiver of the datasharing")
 	shareCmd.Flags().StringP("input", "i", "", "Specify the input file for datasharing")
 	shareCmd.Flags().StringP("output", "o", "", "Specify the output file for datasharing")
 }

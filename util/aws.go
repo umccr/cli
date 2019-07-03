@@ -40,3 +40,7 @@ func bucketAndKey(s3Url string) (string, string) {
 	//fmt.Printf("proto: %q, bucket: %q, key: %q", u.Scheme, u.Host, u.Path)
 	return u.Host, u.Path
 }
+
+//XXX: Glacier defrost
+// func restoreFromGlacier(){
+// }

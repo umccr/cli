@@ -22,11 +22,31 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws/external"
+	"github.com/umccr/cli/util"
 
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+// Athena/APIGW data structure in JSON
+// http://json2struct.mervine.net/
+type findResults struct {
+	Meta struct {
+		Page       int `json:"page"`
+		Size       int `json:"size"`
+		Start      int `json:"start"`
+		TotalPages int `json:"totalPages"`
+		TotalRows  int `json:"totalRows"`
+	} `json:"meta"`
+	Rows struct {
+		DataRows  [][]string `json:"dataRows"`
+		HeaderRow []struct {
+			Key      string `json:"key"`
+			Sortable bool   `json:"sortable"`
+		} `json:"headerRow"`
+	} `json:"rows"`
+}
 
 // findCmd represents the find command
 var findCmd = &cobra.Command{
@@ -35,9 +55,29 @@ var findCmd = &cobra.Command{
 	Long:  `Uses the indexed S3 bucket listings database to lookup for filenames and metadata.`,
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		// XXX: Handle pagination gracefully, perhaps tailored to usecases?
-		res := apiGwFindQuery(fmt.Sprintf("/dev/files?query=%s&rowsPerPage=5000", args[0]))
-		parseFindQueryResults(res)
+		var res findResults
+
+		count, _ := cmd.Flags().GetBool("count")
+		if count {
+			// Only interested in metadata for the total count, so only one page to retrieve
+			req := apiGwFindQuery(fmt.Sprintf("/dev/files?query=%s&rowsPerPage=1", args[0]))
+			json.Unmarshal([]byte(req), &res)
+			fmt.Printf("%d\n", res.Meta.TotalRows)
+		} else {
+			// Regular request without parameters
+			// XXX: implement limit for amount of rows returned
+			req := apiGwFindQuery(fmt.Sprintf("/dev/files?query=%s&rowsPerPage=1", args[0]))
+			json.Unmarshal([]byte(req), &res)
+
+			totalPages := res.Meta.TotalPages
+			for page := 1; page < totalPages; page++ {
+				req := apiGwFindQuery(fmt.Sprintf("/dev/files?query=%s&page=%d&rowsPerPage=1000", args[0], page))
+				json.Unmarshal([]byte(req), &res)
+				for row := range res.Rows.DataRows {
+					fmt.Printf("%s\n", res.Rows.DataRows[row][2])
+				}
+			}
+		}
 	},
 }
 
@@ -65,57 +105,23 @@ func apiGwFindQuery(query string) string {
 
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		fmt.Printf("service returned a status not 200: (%d)\n", res.StatusCode)
+		fmt.Printf("ERROR: (%d): (%s)\n", res.StatusCode, res.Status)
 	}
 
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(res.Body)
 	newStr := buf.String()
 
-	// XXX
-	fmt.Println("WARNING: (Auto)-Pagination has not been implemented yet, the results above are a subset")
-
 	return newStr
-}
-
-func parseFindQueryResults(jsonTxt string) {
-
-	// http://json2struct.mervine.net/
-	type findResults struct {
-		Meta struct {
-			Page       int `json:"page"`
-			Size       int `json:"size"`
-			Start      int `json:"start"`
-			TotalPages int `json:"totalPages"`
-			TotalRows  int `json:"totalRows"`
-		} `json:"meta"`
-		Rows struct {
-			DataRows  [][]string `json:"dataRows"`
-			HeaderRow []struct {
-				Key      string `json:"key"`
-				Sortable bool   `json:"sortable"`
-			} `json:"headerRow"`
-		} `json:"rows"`
-	}
-
-	var results findResults
-
-	// XXX:
-	// * implement different find flags such as filesize and timestamp
-	// * {"message":"Missing Authentication Token"}... substitute for "please run umccr login" message
-	json.Unmarshal([]byte(jsonTxt), &results)
-	for i := range results.Rows.DataRows {
-		fmt.Printf("%s\n", results.Rows.DataRows[i][2]) // keynames ("paths", filenames, extensions... object names really)
-	}
 }
 
 func init() {
 	rootCmd.AddCommand(findCmd)
 
-	// XXX: Centralise config reading business
-	// Find home directory.
-
-	//	viper.AddConfigPath(util.sys.FindHome())
+	viper.AddConfigPath(util.FindHome())
 	viper.SetConfigName(".umccr")
 	viper.ReadInConfig()
+
+	findCmd.Flags().BoolP("count", "c", false, "Count number of search results only")
+	//	findCmd.Flags().BoolP("sort", "s", true, "Sort the results")
 }

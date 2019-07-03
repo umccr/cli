@@ -1,7 +1,9 @@
 package util
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/mitchellh/go-homedir"
@@ -14,4 +16,11 @@ func FindHome() string {
 		os.Exit(1)
 	}
 	return home
+}
+
+func ReadLines(streamOrFile io.Reader) {
+	scanner := bufio.NewScanner(os.Stdin)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
 }

@@ -18,8 +18,11 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
+	"regexp"
 
 	"github.com/eugenmayer/go-sshclient/sshwrapper"
+	"github.com/kevinburke/ssh_config"
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 )
@@ -30,79 +33,95 @@ var hpcCmd = &cobra.Command{
 	Short: "Convenient hpc-related operations",
 	Long:  `Assists in day-to-day HPC tasks, with emphasis on migrating away to Cloud environments.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		sshHpc("ls")
+		//sshHpc("spartan.hpc.unimelb.edu.au", "brainstorm", "")
+		readSSHConfig()
 	},
 }
 
-func syncLocalAWSConfig() {
-	// XXX: Copies recently acquired ~/.aws credentials to the correspoding HPC user for seamless AWS operation(s).
-	// It can also sync some other temporary tokens such as Illumina's `~/.igp/.session.yaml`, among others.
+func syncLocalAWSConfig(sshAPI *sshwrapper.SshApi, localHomedir string) {
+	// XXX: Refactor to only copy the assumed role.
+	log.Println("Syncronizing STS AWS creds to HPC cluster")
+	sshAPI.CopyToRemote(localHomedir+"/.aws/credentials", ".aws/credentials")
+	sshAPI.CopyToRemote(localHomedir+"/.aws/config", "aws/credentials")
+
+	// expose on the CLI as:
+	// umccr hpc sync --aws
 }
 
-// func sshCmd(cmd string) {
-// 	key, err := ioutil.ReadFile("~/.ssh/id_rsa")
-// 	if err != nil {
-// 		log.Fatalf("unable to read private key: %v", err)
-// 	}
+func syncLocalIlluminaConfig(sshAPI *sshwrapper.SshApi, localHomedir string) {
+	log.Println("Syncronizing Illumina creds to HPC cluster")
+	sshAPI.CopyToRemote(localHomedir+"/.igp/.session.yaml", ".igp/.session.yaml")
+}
 
-// 	signer, err := ssh.ParsePrivateKey(key)
-// 	if err != nil {
-// 		log.Fatalf("unable to parse private key: %v", err)
-// 	}
+func syncHpcToAws() {
+	// expose on the CLI as:
+	// umccr hpc sync <hpc_filesystem_path> [--env [prod | dev]]. Sensible default: dev?
+}
 
-// 	config := &ssh.ClientConfig{
-// 		User: "brainstorm",
-// 		Auth: []ssh.AuthMethod{
-// 			ssh.PublicKeys(signer),
-// 		},
-// 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-// 	}
+func setupRRSync() {
+	//XXX: Facilitate rrsync (restricted rsync) as shown here: https://opus.nci.org.au/display/Help/Using+SSH+keys
 
-// 	conn, err := ssh.Dial("tcp", "spartan.hpc.unimelb.edu.au", config)
-// 	defer conn.Close()
+	// expose on the CLI as:
+	// umccr hpc share <hpc_filesystem_path>
+}
 
-// 	sess, err := conn.NewSession()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	defer sess.Close()
-// 	sessStdOut, err := sess.StdoutPipe()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	go io.Copy(os.Stdout, sessStdOut)
-// 	sessStderr, err := sess.StderrPipe()
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// 	go io.Copy(os.Stderr, sessStderr)
-// 	err = sess.Run(cmd) // eg., /usr/bin/whoami
-// 	if err != nil {
-// 		panic(err)
-// 	}
-// }
-
-func sshHpc(cmd string) {
-	// XXX: Refactor out
+func sshHpc(hpcHost string, hpcUser string, cmd string) {
+	// XXX: Refactor out of here to util lib
 	home, err := homedir.Dir()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	sshAPI, err := sshwrapper.DefaultSshApiSetup("spartan.hpc.unimelb.edu.au", 22, "brainstorm", home+"/.ssh/id_ed25519")
+	// XXX: Scan ~/.ssh/config and discover priv/pubkey settings
+	sshAPI, err := sshwrapper.DefaultSshApiSetup(hpcHost, 22, hpcUser, home+"/.ssh/id_ed25519")
 	if err != nil {
 		fmt.Print(err)
 	}
 
-	stdout, stderr, err := sshAPI.Run(cmd)
+	if cmd != "" {
+		stdout, stderr, err := sshAPI.Run(cmd)
+		if err != nil {
+			log.Print(stdout)
+			log.Print(stderr)
+			log.Fatal(err)
+		}
+	}
+
+	syncLocalAWSConfig(sshAPI, home)
+	syncLocalIlluminaConfig(sshAPI, home)
+
 	if err != nil {
-		log.Print(stdout)
-		log.Print(stderr)
 		log.Fatal(err)
 	}
 
-	log.Print(fmt.Sprintf("your ssh host '%s' returned:\n %s", sshAPI.Host, stdout))
+	//log.Printf("your ssh host '%s' returned:\n %s", sshAPI.Host, stdout)
+}
+
+func readSSHConfig() {
+	f, _ := os.Open(filepath.Join(os.Getenv("HOME"), ".ssh", "config"))
+	cfg, _ := ssh_config.Decode(f)
+	for _, host := range cfg.Hosts {
+		fmt.Println("patterns:", host.Patterns)
+		for _, node := range host.Nodes {
+			// Manipulate the nodes as you see fit, or use a type switch to
+			// distinguish between Empty, KV, and Include nodes.
+			//fmt.Println(node.String())
+			if node.String() == "spartan" {
+				fmt.Println("FOOO")
+			}
+		}
+	}
+
+	// Print the config to stdout:
+	findHpcSSHClusters(cfg.String())
+}
+
+func findHpcSSHClusters(sshConfig string) {
+	var validID = regexp.MustCompile(`^[a-z]+\[[0-9]+\]$`)
+	if validID.MatchString("spartan") {
+		fmt.Println(validID.FindStringSubmatch("spartan"))
+	}
 }
 
 func init() {
