@@ -70,7 +70,7 @@ var findCmd = &cobra.Command{
 			json.Unmarshal([]byte(req), &res)
 
 			totalPages := res.Meta.TotalPages
-			for page := 1; page < totalPages; page++ {
+			for page := 0; page < totalPages; page++ {
 				req := apiGwFindQuery(fmt.Sprintf("/dev/files?query=%s&page=%d&rowsPerPage=1000", args[0], page))
 				json.Unmarshal([]byte(req), &res)
 				for row := range res.Rows.DataRows {
