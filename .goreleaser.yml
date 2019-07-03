@@ -23,7 +23,7 @@ archives:
       windows: Windows
       amd64: x86_64
     format: binary
-    name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}-{{.Arch}}"
+    name_template: "{{.ProjectName}}_{{.Version}}_{{.Os}}"
     files:
       - 'none*'
 
@@ -39,27 +39,28 @@ changelog:
     - '^test:'
 
 brews:
-  name: umccr
-  github:
-    owner: umccr
-    name: cli
-  url_template: "http://github.com/umccr/releases/{{ .Tag }}/{{ .ArtifactName }}"
-  commit_author:
-    name: umccr_cli_goreleaser_bot
-    email: goreleaser@umccr.org
-  folder: Formula
-  homepage: "https://github.com/umccr/cli"
-  description: "UMCCR organizational command line interface."
+  -
+    name: umccr
+    github:
+      owner: umccr
+      name: cli
+    url_template: "http://github.com/umccr/cli/releases/{{ .Tag }}/{{ .ArtifactName }}"
+    commit_author:
+      name: umccr_cli_goreleaser_bot
+      email: services+umccr_cli@umccr.org
+    folder: Formula
+    homepage: "https://github.com/umccr/cli"
+    description: "UMCCR organizational command line interface."
 
-  # Setting this will prevent goreleaser to actually try to commit the updated
-  # formula - instead, the formula file will be stored on the dist folder only,
-  # leaving the responsibility of publishing it to the user.
-  # If set to auto, the release will not be uploaded to the homebrew tap
-  # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
-  # Default is false.
-  skip_upload: true
+    # Setting this will prevent goreleaser to actually try to commit the updated
+    # formula - instead, the formula file will be stored on the dist folder only,
+    # leaving the responsibility of publishing it to the user.
+    # If set to auto, the release will not be uploaded to the homebrew tap
+    # in case there is an indicator for prerelease in the tag e.g. v1.0.0-rc1
+    # Default is false.
+    skip_upload: true
 
-  # Custom install script for brew.
-  # Default is 'bin.install "program"'.
-  install: |
-    bin.install {{ .ArtifactName }}
+    # Custom install script for brew.
+    # Default is 'bin.install "program"'.
+    install: |
+      bin.install {{ .ArtifactName }}
