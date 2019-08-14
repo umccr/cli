@@ -44,3 +44,9 @@ $ cobra add <yourcommand>
 ```
 
 The last command [will create a Go code template](https://github.com/spf13/cobra#overview) for you to fill out.
+
+You can also deploy it locally before pullrequesting your changes:
+
+```
+$ goreleaser --snapshot --skip-publish --rm-dist
+```
