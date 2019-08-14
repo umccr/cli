@@ -60,18 +60,18 @@ var findCmd = &cobra.Command{
 		count, _ := cmd.Flags().GetBool("count")
 		if count {
 			// Only interested in metadata for the total count, so only one page to retrieve
-			req := apiGwFindQuery(fmt.Sprintf("/dev/files?query=%s&rowsPerPage=1", args[0]))
+			req := apiGwFindQuery(fmt.Sprintf("/files?query=%s&rowsPerPage=1", args[0]))
 			json.Unmarshal([]byte(req), &res)
 			fmt.Printf("%d\n", res.Meta.TotalRows)
 		} else {
 			// Regular request without parameters
 			// XXX: implement limit for amount of rows returned
-			req := apiGwFindQuery(fmt.Sprintf("/dev/files?query=%s&rowsPerPage=1", args[0]))
+			req := apiGwFindQuery(fmt.Sprintf("/files?query=%s&rowsPerPage=1", args[0]))
 			json.Unmarshal([]byte(req), &res)
 
 			totalPages := res.Meta.TotalPages
 			for page := 0; page < totalPages; page++ {
-				req := apiGwFindQuery(fmt.Sprintf("/dev/files?query=%s&page=%d&rowsPerPage=1000", args[0], page))
+				req := apiGwFindQuery(fmt.Sprintf("/files?query=%s&page=%d&rowsPerPage=1000", args[0], page))
 				json.Unmarshal([]byte(req), &res)
 				for row := range res.Rows.DataRows {
 					fmt.Printf("%s\n", res.Rows.DataRows[row][2])
