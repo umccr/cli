@@ -17,7 +17,7 @@ package cmd
 import (
 	"fmt"
 
-	goVersion "github.com/christopherhein/go-version"
+	goVersion "go.hein.dev/go-version"
 	"github.com/spf13/cobra"
 )
 

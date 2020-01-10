@@ -2,10 +2,10 @@ language: go
 sudo: false
 
 go:
-    - 1.13.4
+    - 1.x
 matrix:
   include:
-    - go: 1.13.4
+    - go: 1.x
   fast_finish: true
 
 before_deploy:
