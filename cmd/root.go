@@ -45,7 +45,7 @@ func init() {
 
 func initConfig() {
 	viper.SetConfigFile("$HOME/.umccr")
-	viper.SetDefault("aws_apigw_endpoint", "https://api.data-portal.prod.umccr.org")
+	viper.SetDefault("aws_apigw_endpoint", "https://api.data.prod.umccr.org")
 
 	// If a config file is found, read it in.
 	if err := viper.ReadInConfig(); err == nil {
